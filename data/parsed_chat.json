@@ -1,0 +1,37 @@
+[
+    {
+        "timestamp": "09/11/2026, 10:00 AM",
+        "sender": "Rahul",
+        "message": "Hey bro"
+    },
+    {
+        "timestamp": "09/11/2026, 10:01 AM",
+        "sender": "Ayush",
+        "message": "Kya kar raha hai?"
+    },
+    {
+        "timestamp": "09/11/2026, 10:02 AM",
+        "sender": "Rahul",
+        "message": "Kuch nahi bhai 😂"
+    },
+    {
+        "timestamp": "09/11/2026, 10:03 AM",
+        "sender": "Rahul",
+        "message": "Tu bata"
+    },
+    {
+        "timestamp": "09/11/2026, 10:04 AM",
+        "sender": "Ayush",
+        "message": "Coding kar raha hu"
+    },
+    {
+        "timestamp": "09/11/2026, 10:05 AM",
+        "sender": "Rahul",
+        "message": "Fir se 😂"
+    },
+    {
+        "timestamp": "09/11/2026, 10:06 AM",
+        "sender": "Rahul",
+        "message": "Kabhi ghumne bhi chala kar"
+    }
+]

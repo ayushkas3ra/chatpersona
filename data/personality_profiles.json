@@ -1,0 +1,90 @@
+{
+    "Rahul": {
+        "total_messages": 5,
+        "total_words": 14,
+        "average_words_per_message": 2.8,
+        "average_characters_per_message": 12.8,
+        "question_messages": 0,
+        "exclamation_messages": 0,
+        "uppercase_letter_ratio": 0.09803921568627451,
+        "total_emojis": 2,
+        "top_words": [
+            [
+                "hey",
+                1
+            ],
+            [
+                "bro",
+                1
+            ],
+            [
+                "kuch",
+                1
+            ],
+            [
+                "nahi",
+                1
+            ],
+            [
+                "bhai",
+                1
+            ],
+            [
+                "tu",
+                1
+            ],
+            [
+                "bata",
+                1
+            ],
+            [
+                "fir",
+                1
+            ],
+            [
+                "se",
+                1
+            ],
+            [
+                "kabhi",
+                1
+            ]
+        ]
+    },
+    "Ayush": {
+        "total_messages": 2,
+        "total_words": 8,
+        "average_words_per_message": 4.0,
+        "average_characters_per_message": 17.5,
+        "question_messages": 1,
+        "exclamation_messages": 0,
+        "uppercase_letter_ratio": 0.07142857142857142,
+        "total_emojis": 0,
+        "top_words": [
+            [
+                "kar",
+                2
+            ],
+            [
+                "raha",
+                2
+            ],
+            [
+                "kya",
+                1
+            ],
+            [
+                "hai",
+                1
+            ],
+            [
+                "coding",
+                1
+            ],
+            [
+                "hu",
+                1
+            ]
+        ]
+    }
+}
