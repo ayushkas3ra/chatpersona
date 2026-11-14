@@ -2,6 +2,13 @@ import json
 from pathlib import Path
 from ollama import chat
 
+from memory import (
+    initialize_database,
+    save_message,
+    load_history,
+    search_history
+)
+
 #project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,9 +34,20 @@ def generate_response(sender, user_message, profiles, history):
 
     profile = profiles[sender]
 
+    #search sqlite for relevent messages
+    relevent_history = search_history(sender,user_message, limit=5)
+    print(f"\nRetrieved {len(relevent_history)} relevent memories!")
+
     #convert profile into readable information
     style_information = json.dumps(
         profile,
+        indent=2,
+        ensure_ascii=False
+    )
+
+    #convert retrieved memories into readable text
+    memory_information = json.dumps(
+        relevent_history,
         indent=2,
         ensure_ascii=False
     )
@@ -44,6 +62,14 @@ def generate_response(sender, user_message, profiles, history):
 
     COMMUNICATION PROFILE:
     {style_information}
+
+    RELEVANT OLDER CONVERSATION MEMORIES:
+
+    {memory_information}
+
+    Use these retrieved messages as additional context.
+    They may contain information from much older conversations.
+    Prioritize actual conversation evidence over guesses.
 
     IMPORTANT CONVERSATION RULES:
 
@@ -102,6 +128,20 @@ def generate_response(sender, user_message, profiles, history):
     )
     reply =  response.message.content
 
+    #save user message in sqlite
+    save_message(
+        sender,
+        "user",
+        user_message
+    )
+
+    #save AI message in sqlite
+    save_message(
+        sender,
+        "assiatant",
+        reply
+    )
+
     #saving conversation history
     history.append({
         "role":"user",
@@ -120,12 +160,17 @@ def generate_response(sender, user_message, profiles, history):
 
 #main program
 if __name__ == '__main__':
+    #initialize sqlite
+    initialize_database()
+
+    print("\nDatabase connnected successfully")
+
     profiles = load_profiles()
 
     #separate memory for each participant
-    converation_memory = {
-        sender : [] for sender in profiles
-    }
+    # converation_memory = {
+    #     sender : [] for sender in profiles
+    # }
 
     print('\nChatPersona AI response generator')
     print("="*45)
@@ -146,7 +191,10 @@ if __name__ == '__main__':
     print("\nMemory enabled!")
     print("Type 'exit' to stop.")
 
-    history = converation_memory[selected_sender]
+    # history = converation_memory[selected_sender]
+    #load previous conversation with sqlite
+    history = load_history(selected_sender)
+    print(f"\nLoaded {len(history)} previous messages")
 
     while True:
         user_message = input("\nYou: ").strip()
