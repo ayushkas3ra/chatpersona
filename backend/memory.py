@@ -157,7 +157,34 @@ def search_history(participant, query, limit = 5):
 
     return results
 
+#fetching raw text from sqlite by message id which is a primary key in db
+def get_message_by_id(message_id):
+    connection = get_connection()
 
+    cursor = connection.cursor()
+
+    cursor.execute('SELECT content FROM messages WHERE id = ?', (message_id,))
+
+    row = cursor.fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return row[0]
+
+#get user messages and skip ai messages
+def get_user_messages(participant):
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT id, content FROM messages WHERE participant = ? AND role = 'user'", (participant,))
+
+    messages = cursor.fetchall()
+
+    return messages
 
 #Test database independently
 if __name__ == "__main__":
