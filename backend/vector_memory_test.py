@@ -90,11 +90,37 @@
 
 
 #syncing sqlite and chromadb
+# from memory import get_user_messages
+# from vector_memory import sync_memories
+
+# messages = get_user_messages("Rahul")
+
+# print(f"Found {len(messages)} messages")
+
+# sync_memories(messages)
+
+
+# from vector_memory import search_semantic_memory
+
+# question = "What programming language I am learning?"
+
+# res = search_semantic_memory(question)
+
+# print(res)
+
+
 from memory import get_user_messages
-from vector_memory import sync_memories
+from vector_memory import sync_memories, search_semantic_memory
 
-messages = get_user_messages("Rahul")
+participant = "Rahul"
 
-print(f"Found {len(messages)} messages")
+messages = get_user_messages(participant)
 
-sync_memories(messages)
+sync_memories(messages, participant)
+
+results = search_semantic_memory("What programming language am I learning?", participant)
+
+print("\nRelevent messages:")
+
+for message in results:
+    print("-", message)

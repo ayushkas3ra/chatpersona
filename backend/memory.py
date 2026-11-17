@@ -46,8 +46,12 @@ def save_message(participant, role, content):
         VALUES (?, ?, ?)
     ''', (participant, role, content))
 
+    message_id = cursor.lastrowid # id of latest inserted message
+
     connection.commit()
     connection.close()
+
+    return message_id
 
 #load recent conversation history
 def load_history(participant, limit = 20):

@@ -6,8 +6,10 @@ from memory import (
     initialize_database,
     save_message,
     load_history,
-    search_history
+    get_user_messages
 )
+
+from vector_memory import search_semantic_memory, sync_memories, save_embedding
 
 #project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,7 +37,12 @@ def generate_response(sender, user_message, profiles, history):
     profile = profiles[sender]
 
     #search sqlite for relevent messages
-    relevent_history = search_history(sender,user_message, limit=5)
+    # relevent_history = search_history(sender,user_message, limit=5)
+    relevent_history = search_semantic_memory(
+        question=user_message,
+        participant=sender,
+        n_results=3
+    )
     print(f"\nRetrieved {len(relevent_history)} relevent memories!")
 
     #convert profile into readable information
@@ -110,35 +117,47 @@ def generate_response(sender, user_message, profiles, history):
     )
 
     #send the request to qwen
+    # response = chat(
+    #     model=MODEL_NAME,
+    #     messages=[
+    #         {
+    #             "role":"system",
+    #             "content":system_prompt
+    #         },
+    #         {
+    #             "role":"user",
+    #             "content":user_message
+    #         }
+    #     ],
+    #     options = {
+    #         "temperature":0.2
+    #     }
+    # )
     response = chat(
-        model=MODEL_NAME,
-        messages=[
-            {
-                "role":"system",
-                "content":system_prompt
-            },
-            {
-                "role":"user",
-                "content":user_message
-            }
-        ],
-        options = {
-            "temperature":0.2
-        }
+        model = MODEL_NAME,
+        messages=messages,
+        options={"temperture":0.2}
     )
     reply =  response.message.content
 
     #save user message in sqlite
-    save_message(
+    message_id = save_message(
         sender,
         "user",
         user_message
     )
 
+    #saving embedding of new message in sqlite
+    try:
+        save_embedding(message_id, user_message, sender)
+        print("New memory embedding saved!")
+    except Exception as error:
+        print(f"Embedding failed: {error}")
+    
     #save AI message in sqlite
     save_message(
         sender,
-        "assiatant",
+        "assistant",
         reply
     )
 
@@ -186,6 +205,10 @@ if __name__ == '__main__':
     if selected_sender not in profiles:
         print("Participant not found!")
         raise SystemExit(1)
+
+    #sync sqlite with chroma
+    stored_messages = get_user_messages(selected_sender)
+    sync_memories(stored_messages, selected_sender)
 
     print("\nAI simulation selected:", selected_sender)
     print("\nMemory enabled!")
