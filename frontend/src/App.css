@@ -1,0 +1,9 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.chat-container {
+  flex: 1;
+  min-width: 0;
+}

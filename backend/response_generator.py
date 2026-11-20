@@ -2,6 +2,11 @@ import json
 from pathlib import Path
 from ollama import chat
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from memory import (
     initialize_database,
     save_message,
@@ -16,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 PROFILE_FILE = BASE_DIR / "data" / "personality_profiles.json"
 
-MODEL_NAME = "qwen3:1.7b"
+MODEL_NAME = os.getenv('OLLAMA_MODEL')
 
 MAX_HISTORY = 20
 
