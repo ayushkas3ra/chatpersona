@@ -109,18 +109,18 @@
 # print(res)
 
 
-from memory import get_user_messages
-from vector_memory import sync_memories, search_semantic_memory
+# from memory import get_user_messages
+# from vector_memory import sync_memories, search_semantic_memory
 
-participant = "Rahul"
+# participant = "Rahul"
 
-messages = get_user_messages(participant)
+# messages = get_user_messages(participant)
 
-sync_memories(messages, participant)
+# sync_memories(messages, participant)
 
-results = search_semantic_memory("What programming language am I learning?", participant)
+# results = search_semantic_memory("What programming language am I learning?", participant)
 
-print("\nRelevent messages:")
+# print("\nRelevent messages:")
 
-for message in results:
-    print("-", message)
+# for message in results:
+#     print("-", message)

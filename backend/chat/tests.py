@@ -1,11 +1,19 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
-
+from django.contrib.auth import get_user_model
 
 class ChatAPITests(TestCase):
-
     def setUp(self):
         self.client = APIClient()
+
+        User = get_user_model()
+
+        self.user = User.objects.create_user(
+            username="testuser",
+            password="TestPassword123"
+        )
+
+        self.client.force_authenticate(user=self.user)
 
     def test_chat_requires_message(self):
         response = self.client.post(
@@ -47,3 +55,12 @@ class ChatAPITests(TestCase):
             response.data["message"],
             "Participant not found!"
         )
+
+    def test_unauthenticated_user_can_not_access_chat_history(self):
+        self.client.force_authenticate(user = None)
+
+        response = self.client.get(
+            '/api/history/'
+        )
+
+        self.assertEqual(response.status_code, 403)
