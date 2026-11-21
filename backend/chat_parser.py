@@ -2,28 +2,39 @@ import re
 import json
 from pathlib import Path
 
-def parse_chat(file_path):
+
+def parse_chat_text(text):
     messages = []
-    pattern = re.compile(
-        r"^\[(.*?)\]\s(.*?):\s(.*)$"
-    )
-    with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            if not line:
-                continue
-            match = pattern.match(line)
-            if match:
-                timestamp, sender, message = match.groups()
-                messages.append({
-                    "timestamp":timestamp,
-                    "sender":sender,
-                    "message":message
-                    })
-            elif messages:
-                #Handle messages spanning multiple lines
-                messages[-1]["message"] += "\n" + line
+
+    pattern = re.compile(r"^\[(.*?)\]\s(.*?):\s(.*)$")
+
+    for line in text.splitlines():
+        line = line.strip()
+
+        if not line:
+            continue
+
+        match = pattern.match(line)
+
+        if match:
+            timestamp, sender, message = match.groups()
+
+            messages.append(
+                {"timestamp": timestamp, "sender": sender, "message": message}
+            )
+
+        elif messages:
+            messages[-1]["message"] += "\n" + line
+
+        print("PARSED MESSAGES:", messages)
+
     return messages
+
+
+def parse_chat(file_path):
+    with open(file_path, "r", encoding="utf-8-sig") as file:
+        return parse_chat_text(file)
+
 
 if __name__ == "__main__":
     file_path = Path("../data/sample_chats/sample.txt")
