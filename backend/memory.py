@@ -1,8 +1,6 @@
 import sqlite3
 from pathlib import Path
-
 import re
-from collections import Counter
 
 #Database location
 BASE_DIR = Path(__file__).resolve().parent.parent

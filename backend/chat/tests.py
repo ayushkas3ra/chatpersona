@@ -2,8 +2,11 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 
-from chat.models import ChatImport, Persona
+from chat.models import ChatImport, Persona, ChatMessage
+
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -96,8 +99,6 @@ class ChatAPITests(TestCase):
 
         response = self.client.post("/api/uploads/", {"file": file}, format="multipart")
 
-        print("API RESPONSE:", response.data)
-
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["message_count"], 3)
 
@@ -122,3 +123,97 @@ class ChatAPITests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(ChatImport.objects.count(), 0)
+
+    def test_upload_generates_personality_profiles(self):
+        file = SimpleUploadedFile(
+            "friends.txt",
+            (
+                b"[22/11/2026, 08:00] Rahul: Hello!\n"
+                b"[22/11/2026, 08:01] Ayush: Hi!\n"
+                b"[22/11/2026, 08:03] Rahul: How are you?"
+            ),
+            content_type="text/plain",
+        )
+
+        response = self.client.post("/api/uploads/", {"file": file}, format="multipart")
+
+        self.assertEqual(response.status_code, 201)
+
+        Rahul = Persona.objects.get(
+            chat_import_id=response.data["id"], participant_name="Rahul"
+        )
+
+        Ayush = Persona.objects.get(
+            chat_import_id=response.data["id"], participant_name="Ayush"
+        )
+
+        self.assertEqual(Rahul.personality_data["total_messages"], 2)
+
+        self.assertEqual(Ayush.personality_data["total_messages"], 1)
+
+        self.assertIn("average_words_per_message", Rahul.personality_data)
+
+    def test_user_can_not_access_other_users_persona(self):
+        other_user = User.objects.create_user(
+            username="otheruser", password="StrongTestPassword123!"
+        )
+
+        other_import = ChatImport.objects.create(
+            user=other_user, original_filename="private.txt"
+        )
+
+        other_persona = Persona.objects.create(
+            chat_import=other_import, participant_name=other_user
+        )
+
+        response = self.client.post(
+            "/api/chat/",
+            {"persona_id": other_persona.id, "message": "Hello"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    @patch("chat.views.generate_persona_response")
+    def test_chat_saves_messages_for_correct_persona(self, mock_generate):
+        mock_generate.return_value = "Hey there!"
+
+        # create chat_import
+        chat_import = ChatImport.objects.create(
+            user=self.user, original_filename="freinds.txt"
+        )
+
+        # create persona
+        persona = Persona.objects.create(
+            chat_import=chat_import,
+            participant_name="Rahul",
+            personality_data={"total_messages": 10},
+        )
+
+        # response.post
+        response = self.client.post(
+            "/api/chat/", {"persona_id": persona.id, "message": "Hello!"}, format="json"
+        )
+
+        print("STATUS:", response.status_code)
+        print("REDIRECT:", response.get("Location"))
+
+        # self.assert
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["reply"], "Hey there!")
+
+        # filter messages by persona
+        messages = ChatMessage.objects.filter(persona=persona).order_by("id")
+
+        # assert equal
+        self.assertEqual(messages.count(), 2)
+
+        self.assertEqual(messages[0].role, "user")
+        self.assertEqual(messages[0].content, "Hello!")
+
+        self.assertEqual(messages[1].role, "assistant")
+        self.assertEqual(messages[1].content, "Hey there!")
+
+        # mock_generate
+        mock_generate.assert_called_once()
+

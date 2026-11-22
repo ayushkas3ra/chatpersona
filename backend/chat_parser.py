@@ -26,8 +26,6 @@ def parse_chat_text(text):
         elif messages:
             messages[-1]["message"] += "\n" + line
 
-        print("PARSED MESSAGES:", messages)
-
     return messages
 
 

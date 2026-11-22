@@ -35,8 +35,6 @@ export default function ChatWindow({ participant }) {
       //fetching history
       try {
         const history = await getChatHistory(participant)
-        console.log('History:', history)
-        console.log('Is array?', Array.isArray(history))
         if (!cancelled) {
           setMessages(Array.isArray(history) ? history : [])
         }

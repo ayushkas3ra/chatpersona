@@ -1,6 +1,5 @@
 import json
 import re
-import unicodedata
 from pathlib import Path
 from collections import Counter
 
