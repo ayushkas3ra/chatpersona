@@ -16,7 +16,7 @@ from response_generator import (
     generate_persona_response,
 )
 from memory import initialize_database, load_history, get_user_messages
-from vector_memory import sync_memories
+from vector_memory import sync_memories, search_semantic_memory, save_embedding
 
 from .models import Persona, ChatImport, ChatMessage
 from pathlib import Path
@@ -95,7 +95,7 @@ def chat_history(request):
         )
 
     # get persona by Persona persona_id and user
-    persona = get_object_or_404(Persona, id = persona_id, chat_import__user=request.user)
+    persona = get_object_or_404(Persona, id=persona_id, chat_import__user=request.user)
 
     # filter messages in ChatMessage
     messages = ChatMessage.objects.filter(persona=persona).order_by("id")
@@ -195,6 +195,13 @@ def upload_chat(request):
     )
 
 
+def save_message_embedding(message_id, content, persona_id):
+    try:
+        save_embedding(message_id=message_id, message=content, persona_id=persona_id)
+    except Exception:
+        logger.exception("Failed to save embedding for message %s", message_id)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def chat_view(request):
@@ -226,6 +233,7 @@ def chat_view(request):
             user_message=user_message,
             personality_profile=persona_profile,
             history=history,
+            persona_id=persona.id,
         )
     except Exception:
         logger.exception("Failed to generate AI response")
@@ -236,8 +244,17 @@ def chat_view(request):
 
     # save conversation to django db
     with transaction.atomic():
-        ChatMessage.objects.create(persona=persona, role="user", content=user_message)
+        saved_user_message = ChatMessage.objects.create(
+            persona=persona, role="user", content=user_message
+        )
         ChatMessage.objects.create(persona=persona, role="assistant", content=reply)
+
+        # schedule embedding after database commits
+        transaction.on_commit(
+            lambda: save_message_embedding(
+                saved_user_message.id, saved_user_message.content, persona.id
+            )
+        )
 
     # return response
     return Response({"persona_id": persona.id, "reply": reply})

@@ -241,3 +241,34 @@ class ChatAPITests(TestCase):
         response = self.client.get(reverse("history"), {"persona_id": other_persona.id})
 
         self.assertEqual(response.status_code, 404)
+
+    @patch("chat.views.save_embedding")
+    @patch("chat.views.generate_persona_response")
+    def test_chat_saves_embedding_after_commit(
+        self, mock_generate, mock_save_embedding
+    ):
+        mock_generate.return_value = "Hey!"
+
+        # use an existing persona owned by an authenticated user
+        persona = Persona.objects.create(
+            chat_import=ChatImport.objects.create(
+                user=self.user, original_filename="test.txt"
+            ),
+            participant_name="Rahul",
+            personality_data={},
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                "/api/chat/",
+                {"persona_id": persona.id, "message": "Hello!"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        saved_message = ChatMessage.objects.get(persona=persona, role="user")
+
+        mock_save_embedding.assert_called_once_with(
+            message_id=saved_message.id, message="Hello!", persona_id=persona.id
+        )

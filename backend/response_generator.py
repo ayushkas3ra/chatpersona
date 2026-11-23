@@ -27,6 +27,7 @@ def load_profiles():
         profiles = json.load(file)
         return profiles
 
+
 # generate a communication-style-based response
 def generate_response(sender, user_message, profiles, history):
     if sender not in profiles:
@@ -114,7 +115,7 @@ def generate_response(sender, user_message, profiles, history):
     #         "temperature":0.2
     #     }
     # )
-    response = chat(model=MODEL_NAME, messages=messages, options={"temperture": 0.2})
+    response = chat(model=MODEL_NAME, messages=messages, options={"temperature": 0.2})
     reply = response.message.content
 
     # save user message in sqlite
@@ -140,14 +141,25 @@ def generate_response(sender, user_message, profiles, history):
 
     return reply
 
+
 # new response generator
-def generate_persona_response(user_message, personality_profile, history):
+def generate_persona_response(user_message, personality_profile, history, persona_id):
     # check is message is empty
     if not user_message.strip():
         raise ValueError("Message can not be empty!")
 
+        # retrieve relevent older memories
+    try:
+        relevent_memories = search_semantic_memory(
+            question=user_message, persona_id=persona_id, n_results=3
+        )
+    except Exception:
+        relevent_memories = []
+
     # dump style information
     style_information = json.dumps(personality_profile, indent=2, ensure_ascii=False)
+
+    memory_information = json.dumps(relevent_memories, indent=2, ensure_ascii=False)
 
     # system prompt
     system_prompt = f"""
@@ -158,6 +170,9 @@ def generate_persona_response(user_message, personality_profile, history):
 
     COMMUNICATION PROFILE:
     {style_information}
+
+    RELEVENT_PREVIOUS_MEMORIES:
+    {memory_information}
 
     RULES:
     1. Use the vocabulary and writing style in the profile.

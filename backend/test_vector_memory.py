@@ -89,7 +89,7 @@
 # collection.delete(ids=string_ids)
 
 
-#syncing sqlite and chromadb
+# syncing sqlite and chromadb
 # from memory import get_user_messages
 # from vector_memory import sync_memories
 
@@ -124,3 +124,54 @@
 
 # for message in results:
 #     print("-", message)
+
+
+import unittest
+from unittest.mock import patch, MagicMock
+
+from vector_memory import (
+    save_embedding,
+    search_semantic_memory,
+    delete_persona_memories,
+)
+
+
+class VectorMemoryTests(unittest.TestCase):
+
+    @patch("vector_memory.get_embedding")
+    @patch("vector_memory.collection")
+    def test_save_embedding_uses_persona_id(self, mock_collection, mock_embedding):
+        mock_embedding.return_value = [0.1, 0.2, 0.3]
+
+        save_embedding(message_id=42, message="Hello!", persona_id=5)
+
+        mock_collection.upsert.assert_called_once_with(
+            ids=["persona:5:message:42"],
+            embeddings=[[0.1, 0.2, 0.3]],
+            documents=["Hello!"],
+            metadatas=[{"persona_id": 5}],
+        )
+
+    @patch("vector_memory.get_embedding")
+    @patch("vector_memory.collection")
+    def test_search_filters_by_persona_id(self, mock_collection, mock_embedding):
+        mock_embedding.return_value = [0.1, 0.2, 0.3]
+
+        mock_collection.query.return_value = {"documents": [["Relevant message"]]}
+
+        results = search_semantic_memory(question="Hello", persona_id=5)
+
+        self.assertEqual(results, ["Relevant message"])
+
+        mock_collection.query.assert_called_once_with(
+            query_embeddings=[[0.1, 0.2, 0.3]],
+            n_results=3,
+            where={"persona_id": 5},
+            include=["documents"],
+        )
+
+    @patch("vector_memory.collection")
+    def test_delete_only_selected_persona(self, mock_collection):
+        delete_persona_memories(persona_id=5)
+
+        mock_collection.delete.assert_called_once_with(where={"persona_id": 5})
