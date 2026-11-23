@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-
 class ChatImport(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_imports"
@@ -13,7 +12,6 @@ class ChatImport(models.Model):
 
     def __str__(self):
         return f"{self.original_filename} - {self.user}"
-
 
 class Persona(models.Model):
     chat_import = models.ForeignKey(
@@ -36,7 +34,6 @@ class Persona(models.Model):
 
     def __str__(self):
         return self.participant_name
-
 
 class ChatMessage(models.Model):
     ROLE_CHOICES = [("user", "User"), ("assistant", "Assistant")]

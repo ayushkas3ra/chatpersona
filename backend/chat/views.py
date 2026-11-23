@@ -73,29 +73,47 @@ def chat_message(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def chat_history(request):
-    participant = request.query_params.get("participant")
+    # get persona id from request
+    persona_id = request.query_params.get("persona_id")
 
-    if not participant:
+    # if not persona id then error
+    if not persona_id:
         return Response(
-            {"message": "Participant required"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Persona id is required"}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    profiles = load_profiles()
-
-    if participant not in profiles:
+    # check persona id is valid
+    try:
+        persona_id = int(persona_id)
+        if persona_id <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
         return Response(
-            {"message": "Participant not found!"}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Invalid persona id"}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    history = load_history(participant)
+    # get persona by Persona persona_id and user
+    persona = get_object_or_404(Persona, id = persona_id, chat_import__user=request.user)
 
-    messages = [
-        {"id": index, "role": message["role"], "content": message["content"]}
-        for index, message in enumerate(history)
+    # filter messages in ChatMessage
+    messages = ChatMessage.objects.filter(persona=persona).order_by("id")
+
+    # extract data(id, role, content) from messages
+    data = [
+        {"id": message.id, "role": message.role, "content": message.content}
+        for message in messages
     ]
 
-    return Response({"participant": participant, "messages": messages})
+    # return persona_id, participant_name and messages
+    return Response(
+        {
+            "persona_id": persona.id,
+            "participant_name": persona.participant_name,
+            "messages": data,
+        }
+    )
 
 
 @api_view(["GET"])

@@ -45,11 +45,18 @@ class ChatAPITests(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_history_rejects_non_existent_participant(self):
-        response = self.client.get("/api/history/?participant=UnknownPerson")
+    def test_history_rejects_non_existent_persona(self):
+        response = self.client.get("/api/history/?persona_id=9999999")
 
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.data["message"], "Participant not found!")
+
+        self.assertIn("detail", response.data)
+
+    def test_history_rejects_invalid_persona_id(self):
+        response = self.client.get("/api/history/", {"persona_id": 0})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"], "Invalid persona id")
 
     def test_unauthenticated_user_can_not_access_chat_history(self):
         self.client.force_authenticate(user=None)
@@ -195,9 +202,6 @@ class ChatAPITests(TestCase):
             "/api/chat/", {"persona_id": persona.id, "message": "Hello!"}, format="json"
         )
 
-        print("STATUS:", response.status_code)
-        print("REDIRECT:", response.get("Location"))
-
         # self.assert
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["reply"], "Hey there!")
@@ -217,3 +221,23 @@ class ChatAPITests(TestCase):
         # mock_generate
         mock_generate.assert_called_once()
 
+    def user_can_not_read_another_user_chat_history(self):
+        other_user = User.objects.create_user(
+            username="otheruser", password="StrongTestPassword123!"
+        )
+
+        other_import = ChatImport.objects.create(
+            user=other_user, original_filename="private.txt"
+        )
+
+        other_persona = Persona.objects.create(
+            chat_import=other_import, participant_name="Rahul"
+        )
+
+        ChatMessage.objects.create(
+            persona=other_persona, role="user", content="Private message"
+        )
+
+        response = self.client.get(reverse("history"), {"persona_id": other_persona.id})
+
+        self.assertEqual(response.status_code, 404)
