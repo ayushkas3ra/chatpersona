@@ -1,6 +1,5 @@
 import chromadb
 import ollama
-from memory import get_message_by_id
 from pathlib import Path
 
 # dynamic path
@@ -10,31 +9,14 @@ Chroma_PATH = BASE_DIR / "data" / "chroma_db"
 
 client = chromadb.PersistentClient(path=str(Chroma_PATH))
 
-# collection = client.get_or_create_collection(
-#     name="chatpersona_memories"
-# )
 collection = client.get_or_create_collection(name="chatpersona_persona_memories")
 
 EMBEDDING_MODEL = "nomic-embed-text"
 
-
-# def get_embedding(message, model):
-#     response = ollama.embed(model=model, input=message)
-#     return response["embeddings"][0]
 def get_embedding(message, model=EMBEDDING_MODEL):
     response = ollama.embed(model=model, input=message)
     return response["embeddings"][0]
 
-# def save_embedding(message_id, message, participant):
-#     embedding = get_embedding(message, "nomic-embed-text")
-
-
-#     collection.add(
-#         ids = [str(message_id)],
-#         embeddings = [embedding],
-#         documents=[message],
-#         metadatas = [{"participant": participant}]
-#     )
 def save_embedding(message_id, message, persona_id):
     embedding = get_embedding(message)
 
@@ -60,21 +42,6 @@ def get_similar_embeddings_ids(
     )
 
     return results["ids"][0]
-
-# searching similar messages to user query by semantic search in chromadb
-# def search_semantic_memory(question, participant, n_results=3):
-#     # search chromadb for matching id
-#     message_ids = get_similar_embeddings_ids(question, participant, n_results=n_results)
-
-#     # retrieve messages from SQLite
-#     messages = []
-#     for message_id in message_ids:
-#         message = get_message_by_id(message_id)
-#         if message is not None:  # ignore missing messages
-#             messages.append(message)
-
-#     return messages  # return this message
-
 
 def search_semantic_memory(question, persona_id, n_results=3):
     question_embedding = get_embedding(question)
