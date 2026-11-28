@@ -3,16 +3,17 @@ import MessageBubble from './MessageBubble'
 import { useState, useEffect, useRef } from 'react'
 import { sendChatMessage, getChatHistory } from '../services/chatApi'
 
-export default function ChatWindow({ participant }) {
+export default function ChatWindow({ persona }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(true)
 
   const messageListRef = useRef(null)
+  const personaId = persona.id
 
+  // Automatic scrolling
   useEffect(() => {
     if (historyLoading) return
 
@@ -21,26 +22,27 @@ export default function ChatWindow({ participant }) {
     if (container) {
       container.scrollTop = container.scrollHeight
     }
-  }, [messages, historyLoading])
+  }, [messages, historyLoading, loading, error])
 
+  // Load conversation history
   useEffect(() => {
     let cancelled = false
+
     async function loadMessages() {
-      //reset everything
       setHistoryLoading(true)
       setMessages([])
       setInput('')
       setError('')
 
-      //fetching history
       try {
-        const history = await getChatHistory(participant)
+        const history = await getChatHistory(personaId)
+
         if (!cancelled) {
           setMessages(Array.isArray(history) ? history : [])
         }
-      } catch (error) {
+      } catch (err) {
         if (!cancelled) {
-          setError(error.message)
+          setError(err.message)
         }
       } finally {
         if (!cancelled) {
@@ -48,9 +50,15 @@ export default function ChatWindow({ participant }) {
         }
       }
     }
-    loadMessages(participant)
-  }, [participant])
 
+    loadMessages()
+
+    return () => {
+      cancelled = true
+    }
+  }, [personaId])
+
+  // Send a message
   async function handleSendMessage(event) {
     event.preventDefault()
 
@@ -61,17 +69,17 @@ export default function ChatWindow({ participant }) {
     const newMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: input.trim(),
+      content: messageText,
     }
 
-    setMessages((previousMessage) => [...previousMessage, newMessage])
+    setMessages((previous) => [...previous, newMessage])
 
     setInput('')
     setError('')
     setLoading(true)
 
     try {
-      const data = await sendChatMessage(participant, messageText)
+      const data = await sendChatMessage(personaId, messageText)
 
       const aiMessage = {
         id: crypto.randomUUID(),
@@ -81,6 +89,12 @@ export default function ChatWindow({ participant }) {
 
       setMessages((previous) => [...previous, aiMessage])
     } catch (err) {
+      // Remove optimistic message only if the request fails
+      setMessages((previous) =>
+        previous.filter((message) => message.id !== newMessage.id)
+      )
+
+      setInput(messageText)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -90,8 +104,8 @@ export default function ChatWindow({ participant }) {
   return (
     <div className="chat-window">
       <header className="chat-header">
-        <h2>{participant}</h2>
-        <small>AI-generated style simulation</small>
+        <h2>{persona.participant_name}</h2>
+        <small>AI-generated style simulation, not the actual person</small>
       </header>
 
       <div className="message-list" ref={messageListRef}>
@@ -104,7 +118,12 @@ export default function ChatWindow({ participant }) {
         )}
 
         {loading && <p>ChatPersona is thinking...</p>}
-        {error && <p className="chat-error">{error}</p>}
+
+        {error && (
+          <p className="chat-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       <form className="chat-input" onSubmit={handleSendMessage}>
@@ -112,10 +131,16 @@ export default function ChatWindow({ participant }) {
           type="text"
           placeholder="Type a message..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(event) => setInput(event.target.value)}
           disabled={loading || historyLoading}
+          maxLength={4000}
+          aria-label="Chat message"
         />
-        <button type="submit" disabled={loading || historyLoading}>
+
+        <button
+          type="submit"
+          disabled={loading || historyLoading || !input.trim()}
+        >
           {loading ? 'Sending...' : 'Send'}
         </button>
       </form>

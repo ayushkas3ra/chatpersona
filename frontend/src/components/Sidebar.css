@@ -36,3 +36,51 @@
   background-color: #5252d4;
   color: white;
 }
+
+.import-button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 24px;
+  background-color: transparent;
+  border: 1px solid #5252d4;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.import-button:hover {
+  background-color: #292929;
+}
+
+.sidebar-heading {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #a3a3a3;
+  margin-bottom: 16px;
+}
+
+.participant-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.participant-meta {
+  display: block;
+  font-size: 12px;
+  color: #d4d4d4;
+  margin-top: 5px;
+}
+
+.empty-personas {
+  font-size: 13px;
+  color: #a3a3a3;
+  line-height: 1.6;
+}
+
+.sidebar button:focus-visible {
+  outline: 2px solid #a5a5ff;
+  outline-offset: 3px;
+}

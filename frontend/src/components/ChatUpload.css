@@ -1,0 +1,128 @@
+.upload-container {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  box-sizing: border-box;
+  background-color: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.upload-container h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.upload-container > p {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.upload-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.upload-container input[type='file'] {
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  background-color: #0f172a;
+  color: #94a3b8;
+  border: 1px dashed #475569;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.upload-container input::file-selector-button {
+  background-color: #334155;
+  color: #f8fafc;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.upload-container input::file-selector-button:hover {
+  background-color: #475569;
+}
+
+.selected-file {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+  overflow-wrap: anywhere;
+}
+
+.upload-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.upload-consent input {
+  accent-color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.upload-container button[type='submit'] {
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-container button[type='submit']:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.upload-container button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-error,
+.upload-success {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.upload-error {
+  background-color: #450a0a;
+  color: #fca5a5;
+}
+
+.upload-success {
+  background-color: #052e16;
+  color: #86efac;
+}
+
+.upload-container .upload-disclaimer {
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.upload-container input:focus-visible,
+.upload-container button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .upload-container {
+    padding: 16px;
+  }
+}
